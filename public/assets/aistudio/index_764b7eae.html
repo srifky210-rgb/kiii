@@ -1,0 +1,2528 @@
+<html lang="id" class="dark"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxNTE3MDU2NDQ0NzM5MDkwNTc5NiIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2M3ZTZjNGI0MDNmNTg4MDdfZml0bmVzc190cmFja2VyX2FwcC5odG1sLTQ3NiJ9LCJleHAiOjE3OTQ5ODg0NjAsImlhdCI6MTc5NDk4NDg2MCwiYWxnIjoiUlMyNTYifQ.oQRBuhOKyLO0gf9BLy-STJ0iQgbHVKgFbXnkG5H14ts1WV05VvbNJWC87oRsAtCG4WnmRbZIkZDjqAl3qFiqlIyjR2No97U3gBFx-lqSXyG3rwPo9Tq0q0TnWYyyZCw5U1JEMNtKYt8f3yqsTHQ46K-1LxAMK9WAg0aAmtBfNw4GQEZamME3umDWGCajZPRvNZnyUggo5aq_uMkWS5F5ILb8xCRuNpIQjCadk0FMApBg98XILdHJLpMfEhfYZ4_9wevYZInDWIUwOGZiKHAO61OXgDAXk8ooHrLXSgGyhQxlaAjKMkbuKe-Tzx9FOkBoXV920VC8XRBcdniXmvUU9Q","c_c7e6c4b403f58807_fitness_tracker_app.html-476")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.i=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.extensions="";var l=0,t=null,r=null,q=[],F=new TextEncoder,
+G=new TextDecoder;c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*
+16|0;return(f==="x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;
+(g=t)==null||g.postMessage(a)}};Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  const OVERLAY_SELECTOR =
+    'dialog[open], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"]';
+
+  function isVisibleOverlay(element) {
+    if (element.closest('[hidden], [aria-hidden="true"], [inert]')) {
+      return false;
+    }
+    if (window.getComputedStyle(element).visibility === 'hidden') {
+      return false;
+    }
+    for (let cur = element; cur; cur = cur.parentElement) {
+      if (window.getComputedStyle(cur).display === 'none') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function hasOpenOverlay() {
+    const candidates = document.querySelectorAll(OVERLAY_SELECTOR);
+    for (let i = 0; i < candidates.length; i++) {
+      if (isVisibleOverlay(candidates[i])) {
+        return true;
+      }
+    }
+    try {
+      if (document.querySelector('[popover]:popover-open')) {
+        return true;
+      }
+    } catch (e) {
+      // Ignore engines that do not support :popover-open.
+    }
+    return false;
+  }
+
+  function isNonEmptySearchInput(target) {
+    return (
+      Boolean(target) &&
+      target.tagName === 'INPUT' &&
+      typeof target.type === 'string' &&
+      target.type.toLowerCase() === 'search' &&
+      typeof target.value === 'string' &&
+      target.value.length > 0
+    );
+  }
+
+  function shouldIgnoreEscape(event) {
+    return (
+      event.key !== 'Escape' ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing ||
+      event.repeat ||
+      event.keyCode === 229 ||
+      isNonEmptySearchInput(event.target)
+    );
+  }
+
+  let shouldIgnoreCaptureState = false;
+
+  window.addEventListener(
+    'keydown',
+    function(event) {
+      if (event.key === 'Escape') {
+        shouldIgnoreCaptureState =
+          hasOpenOverlay() || isNonEmptySearchInput(event.target);
+      }
+    },
+    {capture: true},
+  );
+
+  window.addEventListener('keydown', function(event) {
+    if (
+      shouldIgnoreEscape(event) ||
+      event.defaultPrevented ||
+      shouldIgnoreCaptureState
+    ) {
+      return;
+    }
+    const wasBlockedOnCapture = shouldIgnoreCaptureState;
+    queueMicrotask(function() {
+      if (event.defaultPrevented || wasBlockedOnCapture) {
+        return;
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({'type': 'escapeKey'}, '*');
+      }
+    });
+  });
+})();</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FC4C02">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PulseRun">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link id="pwaManifestLink" rel="manifest" href="blob:https://2hrtmtukb4vclvezwfuvwexbkt2ejed0767vvx2gx5h5kps6vw-h1018257101.scf.usercontent.goog/63fb7498-e115-4321-b783-2122f7dd8917">
+    <link id="appleTouchIconLink" rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23FC4C02%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230e7c86%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22115%22%20fill%3D%22url(%23bg)%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M110%20270h65l35-95%2055%20165%2045-115%2030%2045h62%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3C%2Fsvg%3E">
+    <title>PulseRun - Fitness, Penjas &amp; Strava Sync</title>
+    <!-- Memuat Tailwind CSS untuk styling responsif dan modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Font Inter & Fredoka dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <!-- Memuat Lucide Icons untuk ikon antarmuka yang tajam -->
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        strava: '#FC4C02',
+                        penjas: '#0e7c86',
+                        penjasLight: '#3fc1c9',
+                        darkBg: '#0B0F19',
+                        darkCard: '#151C2C',
+                        darkSurface: '#1E293B'
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'heartbeat': 'heartbeat 1.2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        heartbeat: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '15%': { transform: 'scale(1.25)' },
+                            '30%': { transform: 'scale(1)' },
+                            '45%': { transform: 'scale(1.15)' },
+                            '60%': { transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Kustomisasi scrollbar agar terlihat bersih seperti aplikasi mobile native */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 9999px;
+        }
+        .glass-panel {
+            background: rgba(21, 28, 44, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        html:not(.dark) .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        /* ==================== CSS ANIMASI KARAKTER PENJAS (SVG) ==================== */
+        :root {
+            --penjas-body: #0d3b46;
+            --penjas-sun: #ffb400;
+        }
+        html.dark {
+            --penjas-body: #e6f4f1;
+        }
+        .figbox {
+            background: linear-gradient(#cdeff0, #e9f9f4 70%, #bfe3c8 70%);
+            border-radius: 1.25rem;
+            padding: 8px;
+            max-width: 240px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        html.dark .figbox {
+            background: linear-gradient(#163842, #122c35 70%, #164436 70%);
+        }
+        .figbox svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .figbox svg line {
+            stroke: var(--penjas-body);
+            stroke-width: 10;
+            stroke-linecap: round;
+        }
+        .figbox svg .tr {
+            stroke-width: 15;
+        }
+        .figbox .hd {
+            fill: var(--penjas-sun);
+            stroke: var(--penjas-body);
+            stroke-width: 4;
+        }
+        .figbox .ey {
+            fill: var(--penjas-body);
+        }
+        .figbox .sm {
+            fill: none;
+            stroke: var(--penjas-body);
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+        .figbox .sh {
+            fill: rgba(0, 0, 0, 0.18);
+        }
+        .figbox .m {
+            transform-origin: var(--o);
+            animation: sw var(--d) ease-in-out infinite alternate;
+            animation-play-state: paused;
+        }
+        .figbox .m[data-l] {
+            animation-direction: normal;
+            animation-timing-function: linear;
+        }
+        .figbox .mv {
+            animation: mv var(--d) ease-in-out infinite alternate;
+            animation-play-state: paused;
+        }
+        .stage-run .figbox .m,
+        .stage-run .figbox .mv {
+            animation-play-state: running;
+        }
+        .stage-paused .figbox .m,
+        .stage-paused .figbox .mv {
+            animation-play-state: paused !important;
+        }
+        @keyframes sw {
+            from { transform: rotate(var(--f)); }
+            to { transform: rotate(var(--t)); }
+        }
+        @keyframes mv {
+            from { transform: translate(var(--fx), var(--fy)); }
+            to { transform: translate(var(--tx), var(--ty)); }
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border-width:0}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.inset-x-0{left:0px;right:0px}.-right-8{right:-2rem}.-top-8{top:-2rem}.bottom-0{bottom:0px}.bottom-2{bottom:0.5rem}.bottom-24{bottom:6rem}.left-1\/2{left:50%}.left-3{left:0.75rem}.right-0{right:0px}.z-40{z-index:40}.z-50{z-index:50}.col-span-2{grid-column:span 2 / span 2}.my-3{margin-top:0.75rem;margin-bottom:0.75rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.ml-0\.5{margin-left:0.125rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-1\.5{height:0.375rem}.h-10{height:2.5rem}.h-12{height:3rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-3{height:0.75rem}.h-3\.5{height:0.875rem}.h-36{height:9rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-9{height:2.25rem}.h-full{height:100%}.h-screen{height:100vh}.min-h-\[3\.5rem\]{min-height:3.5rem}.min-h-screen{min-height:100vh}.w-1\.5{width:0.375rem}.w-10{width:2.5rem}.w-11{width:2.75rem}.w-12{width:3rem}.w-2\.5{width:0.625rem}.w-3{width:0.75rem}.w-3\.5{width:0.875rem}.w-36{width:9rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-7{width:1.75rem}.w-9{width:2.25rem}.w-full{width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-4{--tw-translate-y:1rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes heartbeat{0%, 100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}60%{transform:scale(1)}}.animate-heartbeat{animation:heartbeat 1.2s ease-in-out infinite}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.list-decimal{list-style-type:decimal}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.grid-cols-7{grid-template-columns:repeat(7, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-around{justify-content:space-around}.gap-0\.5{gap:0.125rem}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-3\.5{gap:0.875rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.whitespace-nowrap{white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-200\/60{border-color:rgb(253 230 138 / 0.6)}.border-blue-200\/60{border-color:rgb(191 219 254 / 0.6)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-rose-100{--tw-border-opacity:1;border-color:rgb(255 228 230 / var(--tw-border-opacity, 1))}.border-rose-200\/70{border-color:rgb(254 205 211 / 0.7)}.border-slate-200\/60{border-color:rgb(226 232 240 / 0.6)}.border-slate-200\/70{border-color:rgb(226 232 240 / 0.7)}.border-slate-200\/80{border-color:rgb(226 232 240 / 0.8)}.border-slate-700\/50{border-color:rgb(51 65 85 / 0.5)}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-strava\/20{border-color:rgb(252 76 2 / 0.2)}.border-teal-200\/50{border-color:rgb(153 246 228 / 0.5)}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.border-teal-500{--tw-border-opacity:1;border-color:rgb(20 184 166 / var(--tw-border-opacity, 1))}.bg-amber-200\/60{background-color:rgb(253 230 138 / 0.6)}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-amber-50\/70{background-color:rgb(255 251 235 / 0.7)}.bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.bg-amber-500\/15{background-color:rgb(245 158 11 / 0.15)}.bg-black\/30{background-color:rgb(0 0 0 / 0.3)}.bg-black\/70{background-color:rgb(0 0 0 / 0.7)}.bg-blue-200\/60{background-color:rgb(191 219 254 / 0.6)}.bg-blue-50\/70{background-color:rgb(239 246 255 / 0.7)}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-500\/10{background-color:rgb(59 130 246 / 0.1)}.bg-blue-500\/15{background-color:rgb(59 130 246 / 0.15)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-orange-500{--tw-bg-opacity:1;background-color:rgb(249 115 22 / var(--tw-bg-opacity, 1))}.bg-rose-50\/80{background-color:rgb(255 241 242 / 0.8)}.bg-rose-500{--tw-bg-opacity:1;background-color:rgb(244 63 94 / var(--tw-bg-opacity, 1))}.bg-rose-500\/15{background-color:rgb(244 63 94 / 0.15)}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-strava{--tw-bg-opacity:1;background-color:rgb(252 76 2 / var(--tw-bg-opacity, 1))}.bg-strava\/10{background-color:rgb(252 76 2 / 0.1)}.bg-strava\/20{background-color:rgb(252 76 2 / 0.2)}.bg-teal-50\/70{background-color:rgb(240 253 250 / 0.7)}.bg-teal-500{--tw-bg-opacity:1;background-color:rgb(20 184 166 / var(--tw-bg-opacity, 1))}.bg-teal-500\/10{background-color:rgb(20 184 166 / 0.1)}.bg-teal-600{--tw-bg-opacity:1;background-color:rgb(13 148 136 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/20{background-color:rgb(255 255 255 / 0.2)}.bg-white\/60{background-color:rgb(255 255 255 / 0.6)}.bg-teal-50\/50{background-color:rgb(240 253 250 / 0.5)}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-amber-500{--tw-gradient-from:#f59e0b var(--tw-gradient-from-position);--tw-gradient-to:rgb(245 158 11 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-slate-900{--tw-gradient-from:#0f172a var(--tw-gradient-from-position);--tw-gradient-to:rgb(15 23 42 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-strava{--tw-gradient-from:#FC4C02 var(--tw-gradient-from-position);--tw-gradient-to:rgb(252 76 2 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-teal-600{--tw-gradient-from:#0d9488 var(--tw-gradient-from-position);--tw-gradient-to:rgb(13 148 136 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-slate-800{--tw-gradient-to:rgb(30 41 59 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #1e293b var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-emerald-600{--tw-gradient-to:#059669 var(--tw-gradient-to-position)}.to-orange-500{--tw-gradient-to:#f97316 var(--tw-gradient-to-position)}.to-orange-600{--tw-gradient-to:#ea580c var(--tw-gradient-to-position)}.to-slate-900{--tw-gradient-to:#0f172a var(--tw-gradient-to-position)}.fill-current{fill:currentColor}.object-cover{object-fit:cover}.p-0{padding:0px}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pb-1{padding-bottom:0.25rem}.pb-28{padding-bottom:7rem}.pl-4{padding-left:1rem}.pt-1{padding-top:0.25rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-display{font-family:Fredoka, sans-serif}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-amber-950{--tw-text-opacity:1;color:rgb(69 26 3 / var(--tw-text-opacity, 1))}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-orange-500{--tw-text-opacity:1;color:rgb(249 115 22 / var(--tw-text-opacity, 1))}.text-rose-500{--tw-text-opacity:1;color:rgb(244 63 94 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-strava{--tw-text-opacity:1;color:rgb(252 76 2 / var(--tw-text-opacity, 1))}.text-teal-100{--tw-text-opacity:1;color:rgb(204 251 241 / var(--tw-text-opacity, 1))}.text-teal-600{--tw-text-opacity:1;color:rgb(13 148 136 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-white\/80{color:rgb(255 255 255 / 0.8)}.text-white\/85{color:rgb(255 255 255 / 0.85)}.text-teal-500{--tw-text-opacity:1;color:rgb(20 184 166 / var(--tw-text-opacity, 1))}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-strava\/20{--tw-shadow-color:rgb(252 76 2 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-strava\/30{--tw-shadow-color:rgb(252 76 2 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.ring-2{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.ring-strava\/50{--tw-ring-color:rgb(252 76 2 / 0.5)}.blur-2xl{--tw-blur:blur(40px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-1000{transition-duration:1000ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.after\:absolute::after{content:var(--tw-content);position:absolute}.after\:left-\[2px\]::after{content:var(--tw-content);left:2px}.after\:top-\[2px\]::after{content:var(--tw-content);top:2px}.after\:h-5::after{content:var(--tw-content);height:1.25rem}.after\:w-5::after{content:var(--tw-content);width:1.25rem}.after\:rounded-full::after{content:var(--tw-content);border-radius:9999px}.after\:bg-white::after{content:var(--tw-content);--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.after\:transition-all::after{content:var(--tw-content);transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.after\:content-\[\'\'\]::after{--tw-content:'';content:var(--tw-content)}.hover\:border-teal-500:hover{--tw-border-opacity:1;border-color:rgb(20 184 166 / var(--tw-border-opacity, 1))}.hover\:bg-\[\#e34402\]:hover{--tw-bg-opacity:1;background-color:rgb(227 68 2 / var(--tw-bg-opacity, 1))}.hover\:bg-amber-300:hover{--tw-bg-opacity:1;background-color:rgb(252 211 77 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-500:hover{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-100:hover{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-strava\/20:hover{background-color:rgb(252 76 2 / 0.2)}.hover\:bg-teal-500:hover{--tw-bg-opacity:1;background-color:rgb(20 184 166 / var(--tw-bg-opacity, 1))}.hover\:bg-teal-500\/20:hover{background-color:rgb(20 184 166 / 0.2)}.hover\:text-slate-600:hover{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.hover\:text-teal-500:hover{--tw-text-opacity:1;color:rgb(20 184 166 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.hover\:brightness-105:hover{--tw-brightness:brightness(1.05);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.active\:scale-\[0\.98\]:active{--tw-scale-x:0.98;--tw-scale-y:0.98;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.peer:checked ~ .peer-checked\:bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.peer:checked ~ .peer-checked\:after\:translate-x-full::after{content:var(--tw-content);--tw-translate-x:100%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.peer:checked ~ .peer-checked\:after\:border-white::after{content:var(--tw-content);--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.peer:focus ~ .peer-focus\:outline-none{outline:2px solid transparent;outline-offset:2px}.dark\:block:is(.dark *){display:block}.dark\:hidden:is(.dark *){display:none}.dark\:border-amber-500\/20:is(.dark *){border-color:rgb(245 158 11 / 0.2)}.dark\:border-blue-500\/20:is(.dark *){border-color:rgb(59 130 246 / 0.2)}.dark\:border-darkBg:is(.dark *){--tw-border-opacity:1;border-color:rgb(11 15 25 / var(--tw-border-opacity, 1))}.dark\:border-rose-500\/20:is(.dark *){border-color:rgb(244 63 94 / 0.2)}.dark\:border-slate-800:is(.dark *){--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.dark\:border-slate-800\/80:is(.dark *){border-color:rgb(30 41 59 / 0.8)}.dark\:border-teal-800\/40:is(.dark *){border-color:rgb(17 94 89 / 0.4)}.dark\:bg-darkBg:is(.dark *){--tw-bg-opacity:1;background-color:rgb(11 15 25 / var(--tw-bg-opacity, 1))}.dark\:bg-darkBg\/60:is(.dark *){background-color:rgb(11 15 25 / 0.6)}.dark\:bg-darkBg\/70:is(.dark *){background-color:rgb(11 15 25 / 0.7)}.dark\:bg-darkCard:is(.dark *){--tw-bg-opacity:1;background-color:rgb(21 28 44 / var(--tw-bg-opacity, 1))}.dark\:bg-darkSurface:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.dark\:bg-slate-800:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.dark\:bg-teal-950\/30:is(.dark *){background-color:rgb(4 47 46 / 0.3)}.dark\:bg-white:is(.dark *){--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.dark\:from-darkCard:is(.dark *){--tw-gradient-from:#151C2C var(--tw-gradient-from-position);--tw-gradient-to:rgb(21 28 44 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.dark\:via-\[\#1a2336\]:is(.dark *){--tw-gradient-to:rgb(26 35 54 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #1a2336 var(--tw-gradient-via-position), var(--tw-gradient-to)}.dark\:to-darkCard:is(.dark *){--tw-gradient-to:#151C2C var(--tw-gradient-to-position)}.dark\:text-amber-400:is(.dark *){--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.dark\:text-blue-400:is(.dark *){--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.dark\:text-emerald-600:is(.dark *){--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.dark\:text-slate-100:is(.dark *){--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.dark\:text-slate-200:is(.dark *){--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.dark\:text-slate-300:is(.dark *){--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.dark\:text-slate-400:is(.dark *){--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.dark\:text-slate-900:is(.dark *){--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.dark\:text-teal-400:is(.dark *){--tw-text-opacity:1;color:rgb(45 212 191 / var(--tw-text-opacity, 1))}.dark\:text-white:is(.dark *){--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.dark\:hover\:bg-darkSurface:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-slate-700:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.dark\:hover\:text-slate-200:hover:is(.dark *){--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:h-\[850px\]{height:850px}.sm\:rounded-\[2\.5rem\]{border-radius:2.5rem}.sm\:border-\[6px\]{border-width:6px}.sm\:border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.sm\:p-4{padding:1rem}}</style></head>
+<body class="bg-slate-100 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center p-0 sm:p-4 transition-colors duration-300 select-none">
+
+    <!-- Container Utama Menyerupai Layar Smartphone Modern (Responsif Penuh di Mobile & Desktop) -->
+    <div class="w-full max-w-md bg-white dark:bg-darkBg sm:rounded-[2.5rem] sm:border-[6px] sm:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[850px] relative">
+        
+        <!-- Status Bar Simulasi Mobile -->
+        <div class="px-6 pt-3 pb-1 flex justify-between items-center text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span id="clockTime">07:15</span>
+            <div class="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bluetooth" aria-hidden="true" class="lucide lucide-bluetooth w-3.5 h-3.5 text-blue-500"><path d="m7 7 10 10-5 5V2l5 5L7 17"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" aria-hidden="true" class="lucide lucide-wifi w-3.5 h-3.5"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
+                <div class="flex items-center gap-0.5">
+                    <span>96%</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="battery-charging" aria-hidden="true" class="lucide lucide-battery-charging w-4 h-4 text-emerald-500"><path d="m11 7-3 5h4l-3 5"></path><path d="M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935"></path><path d="M22 14v-4"></path><path d="M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Aplikasi -->
+        <header class="px-5 py-3 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80">
+            <div class="flex items-center gap-2.5">
+                <div class="relative">
+                    <img src="https://placehold.co/100x100/FC4C02/FFFFFF?text=AR" alt="Profil" class="w-9 h-9 rounded-full object-cover ring-2 ring-strava/50">
+                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-darkBg rounded-full" title="Sensor Smartwatch Terhubung"></span>
+                </div>
+                <div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Semangat Pagi,</p>
+                    <h1 class="text-sm font-bold tracking-tight">Andi Pratama</h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5">
+                <!-- Tombol Unduh / Instal Aplikasi -->
+                <button onclick="openDownloadModal()" class="p-2 rounded-full bg-strava/10 text-strava hover:bg-strava/20 transition-colors" title="Download &amp; Install Aplikasi">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" aria-hidden="true" class="lucide lucide-download w-4 h-4"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+                </button>
+                <!-- Tombol Toggle Suara TTS & Efek Audio Penjas -->
+                <button id="soundToggleBtn" onclick="toggleAudioSystem()" class="p-2 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-colors" title="Suara Panduan &amp; Efek Audio">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="volume-2" aria-hidden="true" class="lucide lucide-volume-2 w-4 h-4" id="soundIcon"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg>
+                </button>
+                <!-- Tombol Toggle Tema Terang/Gelap -->
+                <button id="themeToggle" class="p-2 rounded-full bg-slate-100 dark:bg-darkCard hover:bg-slate-200 dark:hover:bg-darkSurface transition-colors" title="Ubah Tema">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sun" aria-hidden="true" class="lucide lucide-sun w-4 h-4 hidden dark:block text-amber-400"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="moon" aria-hidden="true" class="lucide lucide-moon w-4 h-4 block dark:hidden text-slate-700"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"></path></svg>
+                </button>
+                <!-- Badge Status Strava -->
+                <button onclick="switchTab('strava')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-strava/10 text-strava border border-strava/20 text-[11px] font-semibold hover:bg-strava/20 transition-all">
+                    <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"></path></svg>
+                    <span id="headerStravaStatus">Synced</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Area Konten Utama (Scrollable) -->
+        <main id="mainContent" class="flex-1 overflow-y-auto px-5 py-4 space-y-5 pb-28">
+            
+            <!-- ==================== TAB 1: DASHBOARD & LIVE TRACKING ==================== -->
+            <section id="tab-dashboard" class="space-y-4">
+                
+                <!-- Kartu Utama: Live Workout & Kontrol Sesi -->
+                <div class="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-darkCard dark:via-[#1a2336] dark:to-darkCard p-5 text-white shadow-lg border border-slate-700/50 relative overflow-hidden">
+                    <div class="absolute -right-8 -top-8 w-36 h-36 bg-strava/20 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span id="liveIndicator" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                    SIAP LARI
+                                </span>
+                                <span class="text-xs text-slate-400">GPS Akurat</span>
+                            </div>
+                            <h2 class="text-2xl font-extrabold mt-2 tracking-tight font-mono" id="workoutTimer">00:00:00</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Durasi Sesi Lari Outdoor</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400">Pace Rata-rata</span>
+                            <p class="text-lg font-bold text-amber-400 font-mono" id="paceValue">0'00"<span class="text-xs font-normal text-slate-400">/km</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Kontrol Latihan -->
+                    <div class="grid grid-cols-2 gap-2.5 mt-4">
+                        <button id="btnToggleWorkout" onclick="toggleWorkout()" class="col-span-2 py-3 px-4 rounded-2xl bg-strava hover:bg-[#e34402] active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-strava/30 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play" aria-hidden="true" class="lucide lucide-play w-4 h-4 fill-current" id="workoutBtnIcon"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+                            <span id="workoutBtnText">Mulai Lari Sekarang</span>
+                        </button>
+                        <button id="btnFinishWorkout" onclick="finishAndSyncWorkout()" class="hidden col-span-2 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle-2" aria-hidden="true" class="lucide lucide-check-circle-2 w-4 h-4"><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg>
+                            <span>Selesai &amp; Unggah ke Strava</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Banner Pintasan Pemanasan Penjas Sebelum Lari -->
+                <div onclick="switchTab('penjas')" class="cursor-pointer rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 p-3.5 text-white flex items-center justify-between shadow-md hover:brightness-105 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">🤸</div>
+                        <div>
+                            <h3 class="text-xs font-bold font-display tracking-wide">Pemanasan Pagi Penjas</h3>
+                            <p class="text-[11px] text-teal-100">8 gerakan animasi &amp; suara sebelum lari!</p>
+                        </div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right w-5 h-5 text-white/80"><path d="m9 18 6-6-6-6"></path></svg>
+                </div>
+
+                <!-- Grid Metrik Utama: Detak Jantung, Langkah Lari, Kalori -->
+                <div class="grid grid-cols-2 gap-3.5">
+                    
+                    <!-- 1. Pendeteksi Detak Jantung -->
+                    <div class="col-span-2 rounded-3xl bg-rose-50/80 dark:bg-darkCard p-4 border border-rose-200/70 dark:border-rose-500/20 shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-2xl bg-rose-500/15 flex items-center justify-center text-rose-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="heart" aria-hidden="true" class="lucide lucide-heart w-5 h-5 fill-current animate-heartbeat" id="heartIcon"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Detak Jantung</h3>
+                                    <p class="text-[11px] text-rose-500 font-medium" id="hrZoneText">Zona 2 • Pembakaran Lemak</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="bpmValue">79</span>
+                                <span class="text-xs font-semibold text-rose-500 ml-0.5">BPM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-16 w-full mt-2 relative bg-white/60 dark:bg-darkBg/60 rounded-2xl p-2 overflow-hidden border border-rose-100 dark:border-slate-800">
+                            <canvas id="heartRateCanvas" class="w-full h-full" width="285" height="64"></canvas>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-2 px-1">
+                            <span>Min: <strong class="text-slate-700 dark:text-slate-200" id="minBpm">64</strong> bpm</span>
+                            <span>Rata-rata: <strong class="text-slate-700 dark:text-slate-200" id="avgBpm">82</strong> bpm</span>
+                            <span>Maks: <strong class="text-rose-500" id="maxBpm">145</strong> bpm</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Langkah Lari & Jarak -->
+                    <div class="rounded-3xl bg-blue-50/70 dark:bg-darkCard p-4 border border-blue-200/60 dark:border-blue-500/20 flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <div class="w-9 h-9 rounded-2xl bg-blue-500/15 flex items-center justify-center text-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="footprints" aria-hidden="true" class="lucide lucide-footprints w-5 h-5"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"></path><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"></path><path d="M16 17h4"></path><path d="M4 13h4"></path></svg>
+                            </div>
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400" id="stepPercent">64%</span>
+                        </div>
+                        
+                        <div class="my-3">
+                            <p class="text-2xl font-extrabold tracking-tight" id="stepsValue">6,420</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">dari 10.000 langkah</p>
+                        </div>
+
+                        <div>
+                            <div class="w-full h-2 bg-blue-200/60 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="stepsProgressBar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 64.2%"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span>Jarak Lari</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200" id="distanceValue">4.82 km</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Total Kalori Terbakar -->
+                    <div class="rounded-3xl bg-amber-50/70 dark:bg-darkCard p-4 border border-amber-200/60 dark:border-amber-500/20 flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <div class="w-9 h-9 rounded-2xl bg-amber-500/15 flex items-center justify-center text-amber-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="flame" aria-hidden="true" class="lucide lucide-flame w-5 h-5 fill-current"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"></path></svg>
+                            </div>
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400" id="calPercent">72%</span>
+                        </div>
+                        
+                        <div class="my-3">
+                            <p class="text-2xl font-extrabold tracking-tight"><span id="caloriesValue">432</span> <span class="text-xs font-semibold text-amber-500">kkal</span></p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Target: 600 kkal</p>
+                        </div>
+
+                        <div>
+                            <div class="w-full h-2 bg-amber-200/60 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="caloriesProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500" style="width: 72%"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span>Aktifitas</span>
+                                <span class="font-bold text-emerald-500">+18% mgg ini</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 2: SEMANGAT PAGI PENJAS (LATIHAN & KUIS) ==================== -->
+            <section id="tab-penjas" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold font-display text-teal-600 dark:text-teal-400">Semangat Pagi Penjas</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pemanasan interaktif dengan animasi &amp; suara</p>
+                    </div>
+                    <!-- Sub-tab: Gerakan vs Kuis Penjas -->
+                    <div class="flex bg-slate-100 dark:bg-darkCard p-1 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                        <button id="subTabLatihan" onclick="switchPenjasSubTab('latihan')" class="px-3 py-1 rounded-lg text-xs font-bold bg-teal-600 text-white transition-all">Gerakan</button>
+                        <button id="subTabKuis" onclick="switchPenjasSubTab('kuis')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 transition-all">Kuis</button>
+                    </div>
+                </div>
+
+                <!-- SUB-TAB A: PEMUTAR GERAKAN & VIDEO DEMO -->
+                <div id="penjas-latihan-view" class="space-y-4">
+                    <div id="penjasStage" class="rounded-3xl bg-white dark:bg-darkCard p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+                        <!-- Area Karakter SVG Animasi -->
+                        <div class="figbox shadow-inner" id="figbox"><svg viewBox="0 0 200 215" role="img" aria-label="Animasi gerakan">
+                <ellipse class="sh" cx="100" cy="203" rx="55" ry="6"></ellipse>
+                <g class="mv" style="--fx:0px;--fy:0px;--tx:0px;--ty:0px;--d:1.2s">
+                    <g class="m" style="--o:100px 125px;--f:5deg;--t:5deg;--d:1.2s;"><line x1="100" y1="125" x2="100" y2="195"></line></g>
+                    <g class="m" style="--o:100px 125px;--f:-5deg;--t:-5deg;--d:1.2s;"><line x1="100" y1="125" x2="100" y2="195"></line></g>
+                    <g class="m" style="--o:100px 125px;--f:0deg;--t:0deg;--d:1.2s;">
+                        <line class="tr" x1="100" y1="64" x2="100" y2="125"></line>
+                        <g class="m" style="--o:100px 64px;--f:-28deg;--t:28deg;--d:1.2s;">
+                            <circle class="hd" cx="100" cy="42" r="19"></circle>
+                            <circle class="ey" cx="93" cy="40" r="2.5"></circle>
+                            <circle class="ey" cx="107" cy="40" r="2.5"></circle>
+                            <path class="sm" d="M93 49q7 6 14 0"></path>
+                        </g>
+                        <g class="m" style="--o:100px 74px;--f:8deg;--t:8deg;--d:1.2s;"><line x1="100" y1="74" x2="100" y2="132"></line></g>
+                        <g class="m" style="--o:100px 74px;--f:-8deg;--t:-8deg;--d:1.2s;"><line x1="100" y1="74" x2="100" y2="132"></line></g>
+                    </g>
+                </g>
+            </svg></div>
+
+                        <!-- Kotak Caption Suara -->
+                        <div class="rounded-2xl bg-slate-900 text-white p-3 text-xs leading-relaxed min-h-[3.5rem] flex items-center" id="penjasCap" aria-live="polite">Tekan “Video Demo” untuk melihat contoh gerakan lengkap dengan penjelasan suara.</div>
+
+                        <!-- Progress Bar Demo & Kontrol Step -->
+                        <div class="space-y-2">
+                            <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div id="demoProgress" class="h-full bg-teal-500 transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-center gap-2">
+                                <button onclick="goDemoStep(demoIdx - 1)" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-darkSurface text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700" title="Langkah Sebelumnya">⏮</button>
+                                <button id="btnDemoPause" onclick="toggleDemoPause()" class="px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-darkSurface text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700">⏸ Jeda</button>
+                                <button onclick="goDemoStep(demoIdx + 1)" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-darkSurface text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700" title="Langkah Berikutnya">⏭</button>
+                            </div>
+                        </div>
+
+                        <!-- Info Gerakan & Timer -->
+                        <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-start">
+                            <div>
+                                <span id="penjasCat" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950">Pemanasan</span>
+                                <h3 id="penjasName" class="text-base font-bold font-display mt-1">Tekuk Kepala</h3>
+                            </div>
+                            <div class="text-right">
+                                <span id="penjasStatus" class="text-[11px] text-slate-400 block">Siap</span>
+                                <span id="penjasTimer" class="text-2xl font-extrabold font-display text-teal-600 dark:text-teal-400">20</span><span class="text-xs text-slate-400"> dtk</span>
+                            </div>
+                        </div>
+
+                        <p id="penjasDesc" class="text-xs text-slate-600 dark:text-slate-300">Gerakkan kepala perlahan ke kiri dan ke kanan untuk melemaskan otot leher.</p>
+
+                        <!-- Progress Hitungan Latihan -->
+                        <div class="w-full h-2.5 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                            <div id="penjasTimerBar" class="h-full bg-teal-500 transition-all duration-1000 linear" style="width: 0%; transition: none;"></div>
+                        </div>
+
+                        <!-- Tombol Aksi Utama Penjas -->
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button id="btnStartDemo" onclick="toggleVideoDemo()" class="py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <span>🎬 Video Demo</span>
+                            </button>
+                            <button id="btnTryExercise" onclick="toggleSingleExercise()" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-darkSurface hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <span>▶ Coba Gerakan</span>
+                            </button>
+                            <button onclick="speakCurrentExercise()" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-darkSurface hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                                <span>🔊 Dengarkan</span>
+                            </button>
+                            <button onclick="startFullMorningSession()" class="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all">
+                                <span>🏃 Sesi Lengkap</span>
+                            </button>
+                        </div>
+
+                        <!-- Langkah-langkah & Manfaat Detail -->
+                        <div class="space-y-2 pt-2 text-xs">
+                            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/70">
+                                <p class="font-bold mb-1 text-slate-700 dark:text-slate-200">Langkah-langkah:</p>
+                                <ol id="penjasStepsList" class="list-decimal pl-4 space-y-1 text-slate-600 dark:text-slate-300"><li>Berdiri tegak, kaki selebar bahu.</li><li>Miringkan kepala ke kiri, tahan sebentar.</li><li>Miringkan ke kanan. Bahu tetap rileks dan napas teratur.</li></ol>
+                            </div>
+                            <div id="penjasBenefitsBox" class="p-3 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/40 text-slate-700 dark:text-slate-200 leading-relaxed">
+                <strong>Manfaat:</strong> Melemaskan otot leher dan mengurangi rasa kaku.<br>
+                <strong>Otot dilatih:</strong> Otot leher (trapezius atas)<br>
+                <strong>Target:</strong> 5 kali tiap sisi • <strong>Tips:</strong> Gerakan pelan, tahan 2 hitungan di tiap sisi.<br>
+                <span class="text-rose-500 font-semibold">Hindari:</span> Memutar kepala penuh dengan cepat.
+            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daftar 8 Gerakan Pemanasan & Olahraga Pagi -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">Daftar Gerakan Pemanasan</h3>
+                        <div id="listPemanasan" class="grid grid-cols-1 gap-2">
+                    <button onclick="haltExercise(); selectExercise(0); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="0" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left border-teal-500 bg-teal-50/50 dark:bg-teal-950/30">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🙆</span>
+                            <div>
+                                <p class="text-xs font-bold">Tekuk Kepala</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">20 detik • 5 kali tiap sisi</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(1); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="1" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">💫</span>
+                            <div>
+                                <p class="text-xs font-bold">Putar Lengan</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 10 putaran ke depan, 10 ke belakang</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(2); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="2" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🤸</span>
+                            <div>
+                                <p class="text-xs font-bold">Peregangan Samping</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 3 kali tiap sisi, tahan 2–3 detik</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(3); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="3" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🌀</span>
+                            <div>
+                                <p class="text-xs font-bold">Putar Pinggang</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 10 putaran tiap arah</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                </div>
+
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1 pt-2">Daftar Olahraga Pagi</h3>
+                        <div id="listOlahraga" class="grid grid-cols-1 gap-2">
+                    <button onclick="haltExercise(); selectExercise(4); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="4" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🏃</span>
+                            <div>
+                                <p class="text-xs font-bold">Lari di Tempat</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 30 detik</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(5); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="5" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⭐</span>
+                            <div>
+                                <p class="text-xs font-bold">Jumping Jack</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 20–30 kali</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(6); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="6" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🦵</span>
+                            <div>
+                                <p class="text-xs font-bold">Squat</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 10–15 kali</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                
+                    <button onclick="haltExercise(); selectExercise(7); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});" data-idx="7" class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🐇</span>
+                            <div>
+                                <p class="text-xs font-bold">Lompat Kecil</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">30 detik • 30 detik</p>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-4 h-4 text-teal-500"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </button>
+                </div>
+                    </div>
+                </div>
+
+                <!-- SUB-TAB B: KUIS PENJAS INTERAKTIF -->
+                <div id="penjas-kuis-view" class="hidden">
+                    <div id="quizContainer" class="rounded-3xl bg-white dark:bg-darkCard p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+                        <!-- Konten Kuis Dirender via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 3: ANALITIK & PROGRES HARIAN ==================== -->
+            <section id="tab-analytics" class="hidden space-y-5">
+                <div>
+                    <h2 class="text-lg font-bold">Analisis &amp; Progres Penjas</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Statistik langkah, zona detak jantung &amp; checklist gerakan</p>
+                </div>
+
+                <!-- Ringkasan Progres Penjas (Tersimpan di LocalStorage) -->
+                <div class="rounded-3xl bg-white dark:bg-darkCard p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-teal-600 dark:text-teal-400">Progres Semangat Pagi</h3>
+                        <button id="btnResetPenjas" onclick="resetPenjasProgress()" class="text-[11px] font-semibold text-rose-500 hover:underline">Reset Progres</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5" id="penjasStatsGrid">
+                        <!-- Diisi via JS -->
+                    </div>
+                    <div id="penjasChecklistContainer" class="pt-2 space-y-1.5 text-xs">
+                        <!-- Checklist 8 gerakan -->
+                    </div>
+                </div>
+
+                <!-- Grafik Batang Mingguan Langkah -->
+                <div class="rounded-3xl bg-white dark:bg-darkCard p-4 border border-slate-200/80 dark:border-slate-800">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold">Langkah Lari Mingguan</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Total: <span class="font-bold text-blue-500">54.890 langkah</span></p>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-500">Rata-rata 7.8k/hr</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-2 items-end h-36 pt-4 px-1" id="weeklyChart"></div>
+                </div>
+
+                <!-- Rincian Zona Detak Jantung -->
+                <div class="rounded-3xl bg-white dark:bg-darkCard p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                    <h3 class="text-sm font-bold">Zona Detak Jantung Hari Ini</h3>
+                    <div class="space-y-2.5 text-xs">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium text-rose-500">Zona 5 • Maksimal (171-190 BPM)</span>
+                                <span class="font-bold">4 mnt</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                                <div class="bg-rose-500 h-full rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium text-orange-500">Zona 4 • Anaerobik (152-170 BPM)</span>
+                                <span class="font-bold">14 mnt</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                                <div class="bg-orange-500 h-full rounded-full" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium text-emerald-500">Zona 3 • Aerobik (133-151 BPM)</span>
+                                <span class="font-bold">22 mnt</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full" style="width: 55%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium text-blue-500">Zona 2 • Bakar Lemak (114-132 BPM)</span>
+                                <span class="font-bold">38 mnt</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 4: INTEGRASI STRAVA & RUTE ==================== -->
+            <section id="tab-strava" class="hidden space-y-5">
+                <div class="rounded-3xl bg-gradient-to-r from-strava to-orange-600 p-5 text-white shadow-lg shadow-strava/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                                <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"></path></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-extrabold">Koneksi Strava</h2>
+                                <p class="text-xs text-white/85">ID Atlet: #8942011 • Terhubung</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="stravaAutoSyncToggle" checked="" class="sr-only peer" onchange="toggleStravaConnection()">
+                            <div class="w-11 h-6 bg-black/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-400"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-white/20 text-center">
+                        <div>
+                            <p class="text-[11px] text-white/80">Jarak Bulan Ini</p>
+                            <p class="text-base font-extrabold">68.4 km</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-white/80">Total Aktivitas</p>
+                            <p class="text-base font-extrabold" id="stravaActivityCount">14 Lari</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-white/80">Elevasi</p>
+                            <p class="text-base font-extrabold">412 m</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Peta Simulasi Rute GPS Strava -->
+                <div class="rounded-3xl bg-white dark:bg-darkCard p-4 border border-slate-200/80 dark:border-slate-800">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold">Pratinjau Rute &amp; Segmen Terakhir</h3>
+                        <span class="text-[11px] font-semibold text-strava">Segmen PR 🏆</span>
+                    </div>
+                    <div class="w-full h-36 rounded-2xl bg-slate-900 relative overflow-hidden flex items-center justify-center border border-slate-800">
+                        <svg class="w-full h-full" viewBox="0 0 300 130">
+                            <defs>
+                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"></path>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid)"></rect>
+                            <path d="M 30 95 Q 70 25, 130 65 T 220 40 T 270 85" fill="none" stroke="#FC4C02" stroke-width="4" stroke-linecap="round"></path>
+                            <circle cx="30" cy="95" r="5" fill="#10B981" stroke="#fff" stroke-width="2"></circle>
+                            <circle cx="270" cy="85" r="5" fill="#FC4C02" stroke="#fff" stroke-width="2"></circle>
+                        </svg>
+                        <div class="absolute bottom-2 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] text-white">
+                            Summarecon Loop • 5.12 km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daftar Riwayat Sinkronisasi Strava -->
+                <div class="space-y-2.5">
+                    <h3 class="text-sm font-bold px-1">Riwayat Aktivitas Tersinkronisasi</h3>
+                    <div id="stravaHistoryList" class="space-y-2.5">
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-strava/10 text-strava flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="activity" aria-hidden="true" class="lucide lucide-activity w-5 h-5"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold">Lari Pagi Santai</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">5.12 km • 410 kkal • 138 BPM</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-semibold px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-500">Terkirim</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Modal Download / Install Aplikasi -->
+        <div id="downloadModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="w-full max-w-sm bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-bold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download-cloud" aria-hidden="true" class="lucide lucide-download-cloud w-5 h-5 text-strava"><path d="M12 13v8l-4-4"></path><path d="m12 21 4-4"></path><path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"></path></svg>
+                        <span>Download &amp; Install PulseRun</span>
+                    </h3>
+                    <button onclick="closeDownloadModal()" class="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-darkSurface">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Simpan aplikasi ini langsung ke HP Android atau iPhone Anda agar dapat berjalan secara offline dan dalam mode layar penuh (PWA).
+                </p>
+
+                <div class="space-y-2 text-xs font-medium">
+                    <button id="btnNativePwaInstall" onclick="triggerNativeInstall()" class="hidden w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="smartphone" aria-hidden="true" class="lucide lucide-smartphone w-4 h-4"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg>
+                        <span>Instal Aplikasi Sekarang (1-Klik)</span>
+                    </button>
+                    <button onclick="downloadHtmlFile()" class="w-full py-3 px-4 rounded-2xl bg-strava hover:bg-[#e34402] text-white font-bold flex items-center justify-center gap-2 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-down" aria-hidden="true" class="lucide lucide-file-down w-4 h-4"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M12 18v-6"></path><path d="m9 15 3 3 3-3"></path></svg>
+                        <span>Download File Aplikasi (.html)</span>
+                    </button>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300">
+                    <p class="font-bold text-slate-800 dark:text-white">📱 Cara Aktivasi Instalasi Penuh (PWA):</p>
+                    <p>1. Unduh file <strong>pulserun-penjas.html</strong> lalu unggah ke hosting HTTPS gratis seperti <strong>Netlify Drop</strong> (<code>app.netlify.com/drop</code>).</p>
+                    <p>2. Buka tautan HTTPS-nya di Chrome/Safari, tombol <strong>"Instal Aplikasi Sekarang"</strong> akan aktif otomatis tanpa bilah browser.</p>
+                </div>
+
+                <button onclick="closeDownloadModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-darkSurface text-xs font-bold">Tutup</button>
+            </div>
+        </div>
+
+        <!-- Toast / Notifikasi Melayang (Pengganti alert()) -->
+        <div id="toastNotification" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+            <div class="px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xl flex items-center gap-2 whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle" aria-hidden="true" class="lucide lucide-check-circle w-4 h-4 text-emerald-400 dark:text-emerald-600"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
+                <span id="toastMessage">Berhasil disinkronkan!</span>
+            </div>
+        </div>
+
+        <!-- Navigasi Bawah (4 Tab: Beranda, Penjas, Progres, Strava) -->
+        <nav class="absolute bottom-0 inset-x-0 glass-panel border-t border-slate-200/60 dark:border-slate-800 px-4 py-2.5 flex justify-around items-center z-40">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center gap-1 text-strava transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" aria-hidden="true" class="lucide lucide-layout-grid w-5 h-5"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+                <span class="text-[10px] font-semibold">Beranda</span>
+            </button>
+            <button onclick="switchTab('penjas')" id="nav-penjas" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-teal-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="person-standing" aria-hidden="true" class="lucide lucide-person-standing w-5 h-5"><circle cx="12" cy="5" r="1"></circle><path d="m9 20 3-6 3 6"></path><path d="m6 8 6 2 6-2"></path><path d="M12 10v4"></path></svg>
+                <span class="text-[10px] font-medium">Penjas</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bar-chart-3" aria-hidden="true" class="lucide lucide-bar-chart-3 w-5 h-5"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                <span class="text-[10px] font-medium">Progres</span>
+            </button>
+            <button onclick="switchTab('strava')" id="nav-strava" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="share-2" aria-hidden="true" class="lucide lucide-share-2 w-5 h-5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
+                <span class="text-[10px] font-medium">Strava</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // Inisialisasi ikon Lucide
+        lucide.createIcons();
+
+        // ==================== STATE APLIKASI PULSERUN ====================
+        let isWorkoutActive = false;
+        let workoutSeconds = 0;
+        let currentBpm = 78;
+        let maxBpm = 145;
+        let bpmHistory = Array(45).fill(78);
+        let steps = 6420;
+        const stepGoal = 10000;
+        let calories = 432;
+        const calorieGoal = 600;
+        let distanceKm = 4.82;
+        let workoutInterval = null;
+        let stravaActivities = 14;
+
+        // ==================== DATA & STATE FITUR SEMANGAT PAGI PENJAS ====================
+        const DEFAULT_POSE = { aL: [8, 8], aR: [-8, -8], lL: [5, 5], lR: [-5, -5], hd: [0, 0], up: [0, 0] };
+        const EXERCISES = [
+            { k: 'Pemanasan', i: '🙆', n: 'Tekuk Kepala', dur: 20, d: 'Gerakkan kepala perlahan ke kiri dan ke kanan untuk melemaskan otot leher.', s: ['Berdiri tegak, kaki selebar bahu.', 'Miringkan kepala ke kiri, tahan sebentar.', 'Miringkan ke kanan. Bahu tetap rileks dan napas teratur.'], b: 'Melemaskan otot leher dan mengurangi rasa kaku.', c: { hd: [-28, 28] }, sp: 1.2 },
+            { k: 'Pemanasan', i: '💫', n: 'Putar Lengan', dur: 30, d: 'Putar kedua lengan membentuk lingkaran besar untuk menyiapkan sendi bahu.', s: ['Rentangkan lengan ke samping setinggi bahu.', 'Putar ke depan membentuk lingkaran besar.', 'Setelah 15 detik, ganti arah putaran ke belakang.'], b: 'Melenturkan sendi bahu dan melancarkan aliran darah ke lengan.', c: { aL: [90, 450, 'l'], aR: [-90, -450, 'l'] }, sp: 2.4 },
+            { k: 'Pemanasan', i: '🤸', n: 'Peregangan Samping', dur: 30, d: 'Angkat lengan ke atas lalu condongkan badan ke samping untuk meregangkan pinggang.', s: ['Angkat kedua lengan lurus ke atas.', 'Condongkan badan ke kiri, tahan dua hitungan.', 'Kembali tegak, lalu condong ke kanan.'], b: 'Meregangkan otot pinggang dan sisi badan.', c: { aL: [165, 165], aR: [-165, -165], up: [-18, 18] }, sp: 1.2 },
+            { k: 'Pemanasan', i: '🌀', n: 'Putar Pinggang', dur: 30, d: 'Letakkan tangan di pinggang, lalu goyangkan badan atas ke kiri dan ke kanan.', s: ['Letakkan kedua tangan di pinggang.', 'Kaki selebar bahu dan lutut sedikit ditekuk.', 'Putar pinggang pelan-pelan, ikuti irama.'], b: 'Menyiapkan otot perut dan punggung bawah.', c: { aL: [60, 60], aR: [-60, -60], up: [-12, 12] }, sp: 1.2 },
+            { k: 'Olahraga pagi', i: '🏃', n: 'Lari di Tempat', dur: 30, d: 'Berlari kecil di tempat dengan ayunan lengan untuk menaikkan detak jantung.', s: ['Angkat kaki kiri dan kanan bergantian.', 'Ayunkan lengan berlawanan dengan kaki.', 'Mendarat ringan di ujung kaki.'], b: 'Melatih daya tahan jantung dan paru-paru.', c: { lL: [0, 38], lR: [0, -38, 'o'], aL: [20, 60], aR: [-20, -60, 'o'], fg: [0, 0, 0, -6] }, sp: 0.3 },
+            { k: 'Olahraga pagi', i: '⭐', n: 'Jumping Jack', dur: 30, d: 'Lompat sambil membuka kaki dan mengangkat lengan ke atas, lalu kembali merapat.', s: ['Mulai berdiri tegak, lengan di samping badan.', 'Lompat, buka kaki dan angkat lengan ke atas.', 'Lompat lagi untuk kembali ke posisi awal.'], b: 'Melatih kekuatan kaki, koordinasi, dan daya tahan.', c: { aL: [8, 165], aR: [-8, -165], lL: [4, 26], lR: [-4, -26], fg: [0, 0, 0, -10] }, sp: 0.6 },
+            { k: 'Olahraga pagi', i: '🦵', n: 'Squat', dur: 30, d: 'Turunkan badan seperti akan duduk, punggung tetap tegak, lalu berdiri kembali.', s: ['Kaki selebar bahu, punggung tegak.', 'Tekuk lutut dan turunkan pinggul perlahan.', 'Dorong dengan tumit untuk berdiri kembali.'], b: 'Menguatkan otot paha, betis, dan pantat.', c: { aL: [20, 85], aR: [-20, -85], lL: [5, 50], lR: [-5, -50], fg: [0, 0, 0, 23] }, sp: 1.2 },
+            { k: 'Olahraga pagi', i: '🐇', n: 'Lompat Kecil', dur: 30, d: 'Lompat-lompat kecil dengan lutut lentur untuk melatih keseimbangan dan kelincahan.', s: ['Berdiri dengan lutut sedikit ditekuk.', 'Lompat kecil, mendarat dengan ujung kaki.', 'Ayunkan lengan santai mengikuti irama.'], b: 'Melatih kelincahan dan membuat badan terasa segar.', c: { aL: [10, 40], aR: [-10, -40], fg: [0, 0, 0, -14] }, sp: 0.6 }
+        ];
+
+        const EXERCISE_DETAILS = [
+            { o: 'Otot leher (trapezius atas)', t: 'Gerakan pelan, tahan 2 hitungan di tiap sisi.', h: 'Memutar kepala penuh dengan cepat.', r: '5 kali tiap sisi' },
+            { o: 'Bahu (deltoid) dan punggung atas', t: 'Mulai dari lingkaran kecil, lalu makin besar.', h: 'Mengangkat bahu hingga ke telinga.', r: '10 putaran ke depan, 10 ke belakang' },
+            { o: 'Otot samping pinggang dan punggung', t: 'Dorong lengan ke atas, dada tetap terbuka.', h: 'Membungkuk ke depan atau ke belakang.', r: '3 kali tiap sisi, tahan 2–3 detik' },
+            { o: 'Otot perut, pinggang, punggung bawah', t: 'Lutut sedikit ditekuk, gerak lembut.', h: 'Memutar terlalu cepat atau terlalu keras.', r: '10 putaran tiap arah' },
+            { o: 'Paha, betis, jantung, dan paru-paru', t: 'Mendarat di ujung kaki, napas teratur.', h: 'Mendarat dengan tumit secara keras.', r: '30 detik' },
+            { o: 'Seluruh badan: bahu, paha, betis, jantung', t: 'Mendarat dengan lutut sedikit lentur.', h: 'Mendarat dengan kaki lurus dan kaku.', r: '20–30 kali' },
+            { o: 'Paha depan dan belakang, pantat, perut', t: 'Berat badan di tumit, pandangan ke depan.', h: 'Lutut menekuk ke dalam atau punggung membungkuk.', r: '10–15 kali' },
+            { o: 'Betis, paha, dan keseimbangan', t: 'Lompat rendah, mendarat pelan.', h: 'Melompat terlalu tinggi sebelum pemanasan.', r: '30 detik' }
+        ];
+
+        const QUIZ_QUESTIONS = [
+            { q: 'Apa tujuan utama pemanasan sebelum berolahraga?', o: ['Membuat badan cepat lelah', 'Menyiapkan otot dan sendi agar tidak cedera', 'Mengurangi berat badan', 'Menghibur teman'], a: 1, e: 'Pemanasan menaikkan suhu otot dan melenturkan sendi sehingga risiko cedera berkurang.' },
+            { q: 'Berapa lama pemanasan yang ideal?', o: ['5–10 menit', '30 detik', '1 jam', 'Tidak perlu'], a: 0, e: 'Pemanasan 5–10 menit sudah cukup untuk menyiapkan tubuh.' },
+            { q: 'Pemanasan sebaiknya dimulai dengan gerakan …', o: ['Paling berat', 'Melompat setinggi mungkin', 'Ringan dan pelan, lalu makin cepat', 'Diam saja'], a: 2, e: 'Mulai dari gerakan ringan lalu tingkatkan bertahap.' },
+            { q: 'Gerakan putar lengan terutama melatih …', o: ['Sendi bahu', 'Jari kaki', 'Tulang rusuk', 'Mata'], a: 0, e: 'Putar lengan melenturkan sendi bahu dan otot sekitarnya.' },
+            { q: 'Sebelum olahraga pagi, sebaiknya kita …', o: ['Menahan haus', 'Minum air putih secukupnya', 'Minum es manis banyak-banyak', 'Tidur lagi'], a: 1, e: 'Tubuh perlu cukup cairan agar tidak mudah lelah dan pusing.' },
+            { q: 'Jumping jack melatih …', o: ['Hanya otot jari', 'Kekuatan kaki, koordinasi, dan daya tahan', 'Hanya pendengaran', 'Tidak ada manfaat'], a: 1, e: 'Gerakan ini melibatkan lengan dan kaki sekaligus sehingga jantung ikut terlatih.' },
+            { q: 'Saat melakukan squat, posisi punggung yang benar adalah …', o: ['Membungkuk dalam', 'Tegak dan dada terbuka', 'Menoleh ke belakang', 'Berputar'], a: 1, e: 'Punggung tegak melindungi tulang belakang dan membuat gerakan lebih efektif.' },
+            { q: 'Peregangan sebaiknya ditahan selama sekitar …', o: ['1 detik', '15–30 detik', '5 menit', 'Tidak perlu ditahan'], a: 1, e: 'Menahan 15–30 detik memberi waktu otot untuk memanjang.' },
+            { q: 'Salah satu manfaat olahraga pagi adalah …', o: ['Badan lebih segar dan siap belajar', 'Mengantuk sepanjang hari', 'Lupa pelajaran', 'Nafsu makan hilang'], a: 0, e: 'Olahraga pagi membantu peredaran darah dan konsentrasi belajar.' },
+            { q: 'Jika terasa pusing atau nyeri saat berolahraga, harus …', o: ['Terus memaksa', 'Berhenti dan memberi tahu guru', 'Berlari lebih cepat', 'Menahan sendiri'], a: 1, e: 'Keselamatan nomor satu: berhenti, istirahat, dan minta bantuan.' }
+        ];
+
+        // Progres tersimpan di LocalStorage
+        let penjasProgress = { d: {}, q: [], days: {} };
+        try {
+            penjasProgress = Object.assign(penjasProgress, JSON.parse(localStorage.getItem('penjasP') || '{}'));
+        } catch (e) {}
+
+        function savePenjasProgress() {
+            try { localStorage.setItem('penjasP', JSON.stringify(penjasProgress)); } catch (e) {}
+        }
+
+        const getDateStr = (d) => d.toLocaleDateString('sv-SE');
+        const getTodayStr = () => getDateStr(new Date());
+
+        function markExerciseDone(idx) {
+            const name = EXERCISES[idx].n;
+            const k = getTodayStr();
+            const obj = penjasProgress.d[name] = penjasProgress.d[name] || { n: 0, days: {} };
+            obj.n++;
+            obj.days[k] = 1;
+            penjasProgress.days[k] = (penjasProgress.days[k] || 0) + 1;
+            savePenjasProgress();
+
+            steps += 65;
+            calories += 8;
+            distanceKm = +(steps * 0.00075).toFixed(2);
+            updateMetricsUI();
+        }
+
+        function getStreakDays() {
+            let s = 0, d = new Date();
+            if (!penjasProgress.days[getDateStr(d)]) d.setDate(d.getDate() - 1);
+            while (penjasProgress.days[getDateStr(d)]) {
+                s++;
+                d.setDate(d.getDate() - 1);
+            }
+            return s;
+        }
+
+        // ==================== AUDIO & TEXT-TO-SPEECH (TTS) ====================
+        let audioCtx = null;
+        let isSoundEnabled = true;
+        const isVoiceSupported = 'speechSynthesis' in window;
+
+        function toggleAudioSystem() {
+            isSoundEnabled = !isSoundEnabled;
+            const btn = document.getElementById('soundToggleBtn');
+            btn.innerHTML = isSoundEnabled
+                ? '<i data-lucide="volume-2" class="w-4 h-4"></i>'
+                : '<i data-lucide="volume-x" class="w-4 h-4 text-rose-500"></i>';
+            lucide.createIcons();
+            if (!isSoundEnabled && isVoiceSupported) speechSynthesis.cancel();
+            showToast(isSoundEnabled ? 'Suara panduan & audio aktif' : 'Mode senyap aktif');
+        }
+
+        function playTone(freq, dur = 0.12, type = 'sine', vol = 0.15, delay = 0) {
+            if (!isSoundEnabled) return;
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const start = audioCtx.currentTime + delay;
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(vol, start);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(start);
+                osc.stop(start + dur);
+            } catch (e) {}
+        }
+
+        function speakText(text) {
+            if (!isSoundEnabled || !isVoiceSupported) return;
+            try {
+                speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'id-ID';
+                utter.rate = 0.95;
+                speechSynthesis.speak(utter);
+            } catch (e) {}
+        }
+
+        const sfxGood = () => { playTone(660, 0.15, 'sine', 0.2); playTone(880, 0.25, 'sine', 0.2, 0.15); };
+        const sfxBad = () => playTone(150, 0.35, 'sawtooth', 0.12);
+        const sfxFanfare = () => [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.3, 'triangle', 0.2, i * 0.15));
+
+        // ==================== RENDER SVG KARAKTER ANIMASI ====================
+        function renderFigureSVG(c, d) {
+            const v = (k, o) => {
+                const [f, t, m] = c[k] || DEFAULT_POSE[k];
+                return `class="m" style="--o:${o};--f:${f}deg;--t:${t}deg;--d:${d}s;${m === 'o' ? 'animation-delay:-' + d + 's;' : ''}"${m === 'l' ? ' data-l' : ''}`;
+            };
+            const g = c.fg || [0, 0, 0, 0];
+            return `<svg viewBox="0 0 200 215" role="img" aria-label="Animasi gerakan">
+                <ellipse class="sh" cx="100" cy="203" rx="55" ry="6"/>
+                <g class="mv" style="--fx:${g[0]}px;--fy:${g[1]}px;--tx:${g[2]}px;--ty:${g[3]}px;--d:${d}s">
+                    <g ${v('lL', '100px 125px')}><line x1="100" y1="125" x2="100" y2="195"/></g>
+                    <g ${v('lR', '100px 125px')}><line x1="100" y1="125" x2="100" y2="195"/></g>
+                    <g ${v('up', '100px 125px')}>
+                        <line class="tr" x1="100" y1="64" x2="100" y2="125"/>
+                        <g ${v('hd', '100px 64px')}>
+                            <circle class="hd" cx="100" cy="42" r="19"/>
+                            <circle class="ey" cx="93" cy="40" r="2.5"/>
+                            <circle class="ey" cx="107" cy="40" r="2.5"/>
+                            <path class="sm" d="M93 49q7 6 14 0"/>
+                        </g>
+                        <g ${v('aL', '100px 74px')}><line x1="100" y1="74" x2="100" y2="132"/></g>
+                        <g ${v('aR', '100px 74px')}><line x1="100" y1="74" x2="100" y2="132"/></g>
+                    </g>
+                </g>
+            </svg>`;
+        }
+
+        // ==================== KONTROL PLAYER PENJAS & VIDEO DEMO ====================
+        let curExIdx = 0;
+        let exTimer = null;
+        let exBeat = null;
+        let isAutoSession = false;
+        let exTimeLeft = 0;
+        let exTotalTime = 1;
+
+        const DEFAULT_CAPTION = 'Tekan “Video Demo” untuk melihat contoh gerakan lengkap dengan penjelasan suara.';
+        let demoTimeout = null;
+        let demoIdx = 0;
+        let demoQueue = [];
+        let isDemoPaused = false;
+
+        function selectExercise(idx) {
+            curExIdx = idx;
+            const e = EXERCISES[idx];
+            const det = EXERCISE_DETAILS[idx];
+
+            document.getElementById('figbox').innerHTML = renderFigureSVG(e.c, e.sp);
+            document.getElementById('penjasCat').textContent = e.k;
+            document.getElementById('penjasName').textContent = e.n;
+            document.getElementById('penjasDesc').textContent = e.d;
+            document.getElementById('penjasStepsList').innerHTML = e.s.map(step => `<li>${step}</li>`).join('');
+            document.getElementById('penjasBenefitsBox').innerHTML = `
+                <strong>Manfaat:</strong> ${e.b}<br>
+                <strong>Otot dilatih:</strong> ${det.o}<br>
+                <strong>Target:</strong> ${det.r} • <strong>Tips:</strong> ${det.t}<br>
+                <span class="text-rose-500 font-semibold">Hindari:</span> ${det.h}
+            `;
+
+            if (demoTimeout === null) document.getElementById('penjasCap').textContent = DEFAULT_CAPTION;
+            document.getElementById('penjasTimer').textContent = e.dur;
+            document.getElementById('penjasTimerBar').style.transition = 'none';
+            document.getElementById('penjasTimerBar').style.width = '0%';
+
+            document.querySelectorAll('.penjas-item-btn').forEach(btn => {
+                const isSelected = +btn.dataset.idx === idx;
+                btn.classList.toggle('border-teal-500', isSelected);
+                btn.classList.toggle('bg-teal-50/50', isSelected);
+                btn.classList.toggle('dark:bg-teal-950/30', isSelected);
+            });
+        }
+
+        function stopVideoDemo() {
+            if (demoTimeout !== null) {
+                isDemoPaused = false;
+                const stage = document.getElementById('penjasStage');
+                stage.classList.remove('stage-paused', 'stage-run');
+                document.getElementById('btnDemoPause').textContent = '⏸ Jeda';
+                clearTimeout(demoTimeout);
+                demoTimeout = null;
+                document.getElementById('btnStartDemo').innerHTML = '<span>🎬 Video Demo</span>';
+                document.getElementById('penjasCap').textContent = DEFAULT_CAPTION;
+                document.getElementById('demoProgress').style.width = '0%';
+                document.querySelectorAll('#penjasStepsList li').forEach(li => li.classList.remove('font-bold', 'text-teal-500'));
+            }
+        }
+
+        function runDemoStep() {
+            if (demoIdx >= demoQueue.length) {
+                speakText('Video selesai. Sekarang coba gerakannya!');
+                stopVideoDemo();
+                document.getElementById('penjasCap').textContent = 'Video selesai. Sekarang tekan “Coba Gerakan”!';
+                document.getElementById('demoProgress').style.width = '100%';
+                return;
+            }
+            const text = demoQueue[demoIdx];
+            document.getElementById('penjasCap').textContent = text;
+            document.getElementById('demoProgress').style.width = ((demoIdx / demoQueue.length) * 100) + '%';
+            speakText(text);
+
+            document.querySelectorAll('#penjasStepsList li').forEach((li, j) => {
+                li.classList.toggle('font-bold', j === demoIdx - 1);
+                li.classList.toggle('text-teal-500', j === demoIdx - 1);
+            });
+
+            demoTimeout = setTimeout(() => {
+                demoIdx++;
+                runDemoStep();
+            }, Math.max(4500, text.length * 80));
+        }
+
+        function toggleVideoDemo() {
+            if (demoTimeout !== null) {
+                stopVideoDemo();
+                if (isVoiceSupported) speechSynthesis.cancel();
+                return;
+            }
+            haltExercise();
+            const e = EXERCISES[curExIdx];
+            demoQueue = [
+                `${e.n}. ${e.d}`,
+                ...e.s.map((s, j) => `Langkah ${j + 1}. ${s}`),
+                `Manfaat: ${e.b} Target: ${EXERCISE_DETAILS[curExIdx].r}.`
+            ];
+            demoIdx = 0;
+            demoTimeout = 0;
+            document.getElementById('btnStartDemo').innerHTML = '<span>⏹ Hentikan</span>';
+            document.getElementById('penjasStage').classList.add('stage-run');
+            runDemoStep();
+        }
+
+        function goDemoStep(n) {
+            if (demoTimeout === null) return;
+            clearTimeout(demoTimeout);
+            isDemoPaused = false;
+            document.getElementById('penjasStage').classList.remove('stage-paused');
+            document.getElementById('btnDemoPause').textContent = '⏸ Jeda';
+            demoIdx = Math.max(0, n);
+            runDemoStep();
+        }
+
+        function toggleDemoPause() {
+            if (demoTimeout === null) {
+                toggleVideoDemo();
+                return;
+            }
+            const stage = document.getElementById('penjasStage');
+            const btn = document.getElementById('btnDemoPause');
+            if (!isDemoPaused) {
+                isDemoPaused = true;
+                clearTimeout(demoTimeout);
+                if (isVoiceSupported) speechSynthesis.cancel();
+                stage.classList.add('stage-paused');
+                btn.textContent = '▶ Lanjut';
+            } else {
+                isDemoPaused = false;
+                stage.classList.remove('stage-paused');
+                btn.textContent = '⏸ Jeda';
+                runDemoStep();
+            }
+        }
+
+        function haltExercise() {
+            stopVideoDemo();
+            clearInterval(exTimer);
+            clearInterval(exBeat);
+            exTimer = exBeat = null;
+            isAutoSession = false;
+            document.getElementById('penjasStage').classList.remove('stage-run');
+            document.getElementById('btnTryExercise').innerHTML = '<span>▶ Coba Gerakan</span>';
+            document.getElementById('penjasStatus').textContent = 'Siap';
+            if (isVoiceSupported) speechSynthesis.cancel();
+        }
+
+        function runExercise(idx, isRest) {
+            clearInterval(exTimer);
+            clearInterval(exBeat);
+            selectExercise(idx);
+            const e = EXERCISES[idx];
+            document.getElementById('penjasStage').classList.add('stage-run');
+            document.getElementById('btnTryExercise').innerHTML = '<span>■ Berhenti</span>';
+            exTotalTime = exTimeLeft = isRest ? 5 : e.dur;
+
+            if (isRest) {
+                document.getElementById('penjasStatus').textContent = 'Istirahat → ' + e.n;
+                speakText('Istirahat sebentar. Berikutnya, ' + e.n);
+            } else {
+                document.getElementById('penjasStatus').textContent = 'Ayo bergerak!';
+                speakText('Mulai! ' + e.n);
+                let beatCount = 0;
+                exBeat = setInterval(() => {
+                    playTone(beatCount++ % 4 ? 150 : 230, 0.1, 'triangle', 0.25);
+                }, 600);
+            }
+
+            document.getElementById('penjasTimer').textContent = exTimeLeft;
+            setTimeout(() => {
+                const bar = document.getElementById('penjasTimerBar');
+                bar.style.transition = 'width 1s linear';
+                bar.style.width = '0%';
+            }, 20);
+
+            exTimer = setInterval(() => {
+                exTimeLeft--;
+                document.getElementById('penjasTimer').textContent = Math.max(exTimeLeft, 0);
+                document.getElementById('penjasTimerBar').style.width = (((exTotalTime - exTimeLeft) / exTotalTime) * 100) + '%';
+
+                if (exTimeLeft > 0 && exTimeLeft <= 3) playTone(880, 0.1, 'square', 0.06);
+
+                if (exTimeLeft <= 0) {
+                    clearInterval(exTimer);
+                    clearInterval(exBeat);
+                    sfxGood();
+                    if (!isRest) {
+                        markExerciseDone(idx);
+                        showToast(`Gerakan "${e.n}" selesai! (+65 langkah)`);
+                    }
+
+                    if (isAutoSession && isRest) {
+                        runExercise(idx, false);
+                    } else if (isAutoSession && idx < EXERCISES.length - 1) {
+                        runExercise(idx + 1, true);
+                    } else {
+                        const wasFullSession = isAutoSession;
+                        haltExercise();
+                        document.getElementById('penjasStatus').textContent = wasFullSession ? 'Sesi Selesai!' : 'Selesai!';
+                        speakText(wasFullSession ? 'Sesi pagi lengkap selesai. Tubuhmu siap berlari!' : 'Bagus sekali!');
+                        if (wasFullSession) setTimeout(sfxFanfare, 400);
+                    }
+                }
+            }, 1000);
+        }
+
+        function toggleSingleExercise() {
+            stopVideoDemo();
+            if (exTimer) {
+                haltExercise();
+                return;
+            }
+            isAutoSession = false;
+            runExercise(curExIdx, false);
+        }
+
+        function startFullMorningSession() {
+            haltExercise();
+            isAutoSession = true;
+            showToast('Memulai Sesi Pagi Lengkap (8 Gerakan)');
+            runExercise(0, false);
+        }
+
+        function speakCurrentExercise() {
+            const e = EXERCISES[curExIdx];
+            speakText(`${e.n}. ${e.d} ${e.s.join(' ')} Manfaat: ${e.b}`);
+        }
+
+        function renderExerciseLists() {
+            const pemanasanEl = document.getElementById('listPemanasan');
+            const olahragaEl = document.getElementById('listOlahraga');
+            pemanasanEl.innerHTML = '';
+            olahragaEl.innerHTML = '';
+
+            EXERCISES.forEach((e, idx) => {
+                const btnHTML = `
+                    <button onclick="haltExercise(); selectExercise(${idx}); document.getElementById('mainContent').scrollTo({top: 0, behavior: 'smooth'});"
+                            data-idx="${idx}"
+                            class="penjas-item-btn w-full flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-darkCard border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 transition-all text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${e.i}</span>
+                            <div>
+                                <p class="text-xs font-bold">${e.n}</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">${e.dur} detik • ${EXERCISE_DETAILS[idx].r}</p>
+                            </div>
+                        </div>
+                        <i data-lucide="play-circle" class="w-4 h-4 text-teal-500"></i>
+                    </button>
+                `;
+                if (e.k === 'Pemanasan') pemanasanEl.innerHTML += btnHTML;
+                else olahragaEl.innerHTML += btnHTML;
+            });
+            lucide.createIcons();
+        }
+
+        // ==================== KUIS PENJAS INTERAKTIF ====================
+        let quizIdx = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+
+        function switchPenjasSubTab(sub) {
+            haltExercise();
+            const isLatihan = sub === 'latihan';
+            document.getElementById('penjas-latihan-view').classList.toggle('hidden', !isLatihan);
+            document.getElementById('penjas-kuis-view').classList.toggle('hidden', isLatihan);
+
+            const btnL = document.getElementById('subTabLatihan');
+            const btnK = document.getElementById('subTabKuis');
+
+            if (isLatihan) {
+                btnL.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-teal-600 text-white transition-all';
+                btnK.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 transition-all';
+            } else {
+                btnK.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-teal-600 text-white transition-all';
+                btnL.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 transition-all';
+                quizIdx = 0;
+                quizScore = 0;
+                renderQuiz();
+            }
+        }
+
+        function renderQuiz() {
+            const box = document.getElementById('quizContainer');
+            if (quizIdx >= QUIZ_QUESTIONS.length) {
+                const msg = quizScore >= 9 ? 'Luar biasa! Kamu juara penjas.' :
+                            quizScore >= 7 ? 'Hebat! Sedikit lagi sempurna.' :
+                            quizScore >= 5 ? 'Lumayan. Pelajari lagi gerakannya ya.' :
+                            'Ayo semangat! Pelajari tab Gerakan lalu ulangi kuisnya.';
+                penjasProgress.q.push({ d: getTodayStr(), s: quizScore });
+                penjasProgress.q = penjasProgress.q.slice(-10);
+                savePenjasProgress();
+                sfxFanfare();
+                speakText(`Skor kamu ${quizScore} dari ${QUIZ_QUESTIONS.length}. ${msg}`);
+
+                box.innerHTML = `
+                    <div class="text-center space-y-3 py-4">
+                        <span class="inline-block px-3 py-1 rounded-full bg-teal-500/10 text-teal-500 text-xs font-bold">Hasil Kuis Penjas</span>
+                        <div class="text-5xl font-extrabold font-display text-teal-600 dark:text-teal-400">${quizScore} / ${QUIZ_QUESTIONS.length}</div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 max-w-xs mx-auto">${msg}</p>
+                        <button onclick="quizIdx=0; quizScore=0; renderQuiz();" class="mt-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold">Ulangi Kuis</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const q = QUIZ_QUESTIONS[quizIdx];
+            quizAnswered = false;
+            box.innerHTML = `
+                <div class="w-full h-2 bg-slate-100 dark:bg-darkBg rounded-full overflow-hidden">
+                    <div class="h-full bg-teal-500 transition-all" style="width: ${(quizIdx / QUIZ_QUESTIONS.length) * 100}%"></div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] text-slate-400">
+                    <span>Soal ${quizIdx + 1} dari ${QUIZ_QUESTIONS.length}</span>
+                    <span class="font-bold text-teal-500">Skor: ${quizScore}</span>
+                </div>
+                <h3 class="text-sm font-bold leading-snug">${q.q}</h3>
+                <button onclick="speakCurrentQuiz()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-darkSurface text-xs font-semibold flex items-center gap-1.5">
+                    <span>🔊 Bacakan Soal</span>
+                </button>
+                <div id="quizOptions" class="space-y-2 pt-1">
+                    ${q.o.map((opt, idx) => `
+                        <button onclick="answerQuiz(${idx})" data-opt="${idx}" class="quiz-opt-btn w-full text-left p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/80 border border-slate-200/80 dark:border-slate-800 hover:border-teal-500 text-xs font-medium transition-all">
+                            <span class="font-bold mr-1.5 text-teal-600 dark:text-teal-400">${'ABCD'[idx]}.</span> ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="quizFeedback"></div>
+            `;
+        }
+
+        function speakCurrentQuiz() {
+            const q = QUIZ_QUESTIONS[quizIdx];
+            speakText(q.q + '. ' + q.o.map((o, i) => 'Pilihan ' + 'ABCD'[i] + '. ' + o).join('. '));
+        }
+
+        function answerQuiz(selectedIdx) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+            const q = QUIZ_QUESTIONS[quizIdx];
+            const isCorrect = selectedIdx === q.a;
+            if (isCorrect) {
+                quizScore++;
+                sfxGood();
+            } else {
+                sfxBad();
+            }
+
+            document.querySelectorAll('.quiz-opt-btn').forEach(btn => {
+                const idx = +btn.dataset.opt;
+                if (idx === q.a) {
+                    btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+                } else if (idx === selectedIdx) {
+                    btn.classList.add('bg-rose-600', 'text-white', 'border-rose-600');
+                }
+            });
+
+            document.getElementById('quizFeedback').innerHTML = `
+                <div class="p-3 rounded-2xl bg-slate-100 dark:bg-darkBg text-xs space-y-2 mt-2">
+                    <p><strong class="${isCorrect ? 'text-emerald-500' : 'text-rose-500'}">${isCorrect ? 'Benar! 🎉' : 'Belum tepat.'}</strong> ${q.e}</p>
+                    <button onclick="quizIdx++; renderQuiz();" class="w-full py-2.5 rounded-xl bg-teal-600 text-white font-bold">
+                        ${quizIdx < QUIZ_QUESTIONS.length - 1 ? 'Soal Berikutnya →' : 'Lihat Hasil Kuis'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // ==================== RENDER PROGRES PENJAS DI TAB ANALITIK ====================
+        let confirmReset = false;
+        function renderPenjasProgress() {
+            const k = getTodayStr();
+            const doneToday = EXERCISES.filter(e => penjasProgress.d[e.n] && penjasProgress.d[e.n].days[k]).length;
+            const totalSessions = EXERCISES.reduce((acc, e) => acc + (penjasProgress.d[e.n] ? penjasProgress.d[e.n].n : 0), 0);
+            const bestQuiz = penjasProgress.q.length ? Math.max(...penjasProgress.q.map(x => x.s)) : null;
+
+            document.getElementById('penjasStatsGrid').innerHTML = `
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/70">
+                    <p class="text-lg font-extrabold font-display text-teal-600 dark:text-teal-400">${doneToday}/${EXERCISES.length}</p>
+                    <p class="text-[11px] text-slate-500">Gerakan Hari Ini</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/70">
+                    <p class="text-lg font-extrabold font-display text-amber-500">${getStreakDays()} Hari</p>
+                    <p class="text-[11px] text-slate-500">Berturut-turut</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/70">
+                    <p class="text-lg font-extrabold font-display text-blue-500">${totalSessions}×</p>
+                    <p class="text-[11px] text-slate-500">Total Latihan</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-darkBg/70">
+                    <p class="text-lg font-extrabold font-display text-emerald-500">${bestQuiz === null ? '–' : bestQuiz + '/' + QUIZ_QUESTIONS.length}</p>
+                    <p class="text-[11px] text-slate-500">Skor Kuis Terbaik</p>
+                </div>
+            `;
+
+            document.getElementById('penjasChecklistContainer').innerHTML = EXERCISES.map(e => {
+                const d = penjasProgress.d[e.n];
+                const ok = d && d.days[k];
+                return `
+                    <div class="flex justify-between items-center py-1.5 border-b border-slate-100 dark:border-slate-800/70">
+                        <span>${ok ? '✅' : '⬜'} ${e.n}</span>
+                        <span class="text-slate-400">${d ? d.n : 0}× selesai</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetPenjasProgress() {
+            const btn = document.getElementById('btnResetPenjas');
+            if (!confirmReset) {
+                confirmReset = true;
+                btn.textContent = 'Klik lagi untuk konfirmasi';
+                setTimeout(() => { confirmReset = false; btn.textContent = 'Reset Progres'; }, 3000);
+                return;
+            }
+            penjasProgress = { d: {}, q: [], days: {} };
+            savePenjasProgress();
+            confirmReset = false;
+            btn.textContent = 'Reset Progres';
+            renderPenjasProgress();
+            showToast('Progres Penjas telah direset');
+        }
+
+        // ==================== DOWNLOAD APLIKASI ====================
+        function openDownloadModal() {
+            document.getElementById('downloadModal').classList.remove('hidden');
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').classList.add('hidden');
+        }
+
+        function downloadHtmlFile() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pulserun-penjas.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File aplikasi berhasil didownload!');
+        }
+
+        // ==================== NOTIFIKASI TOAST ====================
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 3000);
+        }
+
+        // ==================== NAVIGASI TAB UTAMA ====================
+        function switchTab(tabName) {
+            if (tabName !== 'penjas') haltExercise();
+
+            ['dashboard', 'penjas', 'analytics', 'strava'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                navBtn.classList.remove('text-strava', 'text-teal-500');
+                navBtn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            activeBtn.classList.remove('text-slate-400');
+            activeBtn.classList.add(tabName === 'penjas' ? 'text-teal-500' : 'text-strava');
+
+            if (tabName === 'analytics') {
+                renderWeeklyChart();
+                renderPenjasProgress();
+            }
+        }
+
+        // ==================== TOGGLE TEMA GELAP / TERANG ====================
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // ==================== SIMULASI LIVE WORKOUT PULSERUN ====================
+        function toggleWorkout() {
+            isWorkoutActive = !isWorkoutActive;
+            const btn = document.getElementById('btnToggleWorkout');
+            const btnText = document.getElementById('workoutBtnText');
+            const btnFinish = document.getElementById('btnFinishWorkout');
+            const indicator = document.getElementById('liveIndicator');
+
+            if (isWorkoutActive) {
+                btn.classList.remove('bg-strava', 'hover:bg-[#e34402]');
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                btnText.textContent = 'Jeda Lari';
+                btnFinish.classList.remove('hidden');
+                indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> MEREKAM AKTIVITAS`;
+                indicator.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                showToast('Pelacakan GPS & Detak Jantung dimulai');
+
+                workoutInterval = setInterval(() => {
+                    workoutSeconds++;
+                    updateTimerDisplay();
+                    simulateActiveMetrics();
+                }, 1000);
+            } else {
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                btn.classList.add('bg-strava', 'hover:bg-[#e34402]');
+                btnText.textContent = 'Lanjutkan Lari';
+                indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> DIJEDA`;
+                clearInterval(workoutInterval);
+            }
+        }
+
+        function updateTimerDisplay() {
+            const hrs = String(Math.floor(workoutSeconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((workoutSeconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(workoutSeconds % 60).padStart(2, '0');
+            document.getElementById('workoutTimer').textContent = `${hrs}:${mins}:${secs}`;
+        }
+
+        function simulateActiveMetrics() {
+            const newSteps = Math.floor(Math.random() * 2) + 2;
+            steps += newSteps;
+            distanceKm = +(steps * 0.00075).toFixed(2);
+            calories = +(calories + 0.18).toFixed(0);
+
+            const targetBpm = 148 + Math.floor(Math.random() * 16 - 8);
+            currentBpm = Math.round(currentBpm + (targetBpm - currentBpm) * 0.25);
+            if (currentBpm > maxBpm) maxBpm = currentBpm;
+
+            document.getElementById('paceValue').innerHTML = `5'24"<span class="text-xs font-normal text-slate-400">/km</span>`;
+            updateMetricsUI();
+        }
+
+        function updateMetricsUI() {
+            document.getElementById('bpmValue').textContent = currentBpm;
+            document.getElementById('maxBpm').textContent = maxBpm;
+            const zoneEl = document.getElementById('hrZoneText');
+            if (currentBpm < 110) zoneEl.textContent = 'Zona 1 • Pemulihan Santai';
+            else if (currentBpm < 135) zoneEl.textContent = 'Zona 2 • Pembakaran Lemak';
+            else if (currentBpm < 155) zoneEl.textContent = 'Zona 3 • Kardio Aerobik';
+            else zoneEl.textContent = 'Zona 4 • Performa Puncak';
+
+            document.getElementById('stepsValue').textContent = steps.toLocaleString('id-ID');
+            document.getElementById('distanceValue').textContent = `${distanceKm.toFixed(2)} km`;
+            const stepPct = Math.min(100, Math.round((steps / stepGoal) * 100));
+            document.getElementById('stepPercent').textContent = `${stepPct}%`;
+            document.getElementById('stepsProgressBar').style.width = `${stepPct}%`;
+
+            document.getElementById('caloriesValue').textContent = calories;
+            const calPct = Math.min(100, Math.round((calories / calorieGoal) * 100));
+            document.getElementById('calPercent').textContent = `${calPct}%`;
+            document.getElementById('caloriesProgressBar').style.width = `${calPct}%`;
+        }
+
+        function finishAndSyncWorkout() {
+            clearInterval(workoutInterval);
+            isWorkoutActive = false;
+
+            const btn = document.getElementById('btnToggleWorkout');
+            btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            btn.classList.add('bg-strava', 'hover:bg-[#e34402]');
+            document.getElementById('workoutBtnText').textContent = 'Mulai Lari Sekarang';
+            document.getElementById('btnFinishWorkout').classList.add('hidden');
+            document.getElementById('liveIndicator').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> SIAP LARI`;
+            document.getElementById('liveIndicator').className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+
+            stravaActivities++;
+            document.getElementById('stravaActivityCount').textContent = `${stravaActivities} Lari`;
+            const historyList = document.getElementById('stravaHistoryList');
+            const newItem = document.createElement('div');
+            newItem.className = 'p-3.5 rounded-2xl bg-white dark:bg-darkCard border border-strava/40 flex items-center justify-between';
+            newItem.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-strava text-white flex items-center justify-center">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold">Sesi Lari Baru (Baru Saja)</h4>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">${distanceKm.toFixed(2)} km • ${calories} kkal • ${currentBpm} BPM</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-semibold px-2 py-1 rounded-md bg-strava/15 text-strava">Strava Sync ✓</span>
+            `;
+            historyList.prepend(newItem);
+            lucide.createIcons();
+
+            workoutSeconds = 0;
+            updateTimerDisplay();
+            currentBpm = 80;
+            updateMetricsUI();
+            sfxFanfare();
+            showToast('Aktivitas selesai & otomatis diunggah ke Strava!');
+        }
+
+        function toggleStravaConnection() {
+            const isChecked = document.getElementById('stravaAutoSyncToggle').checked;
+            document.getElementById('headerStravaStatus').textContent = isChecked ? 'Synced' : 'Paused';
+            showToast(isChecked ? 'Sinkronisasi otomatis Strava aktif' : 'Sinkronisasi Strava dijeda');
+        }
+
+        // ==================== CANVAS GRAFIK GELOMBANG DETAK JANTUNG ====================
+        const canvas = document.getElementById('heartRateCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        setInterval(() => {
+            if (!isWorkoutActive) {
+                currentBpm = 76 + Math.floor(Math.random() * 6);
+                document.getElementById('bpmValue').textContent = currentBpm;
+            }
+            const spike = (Math.random() > 0.75) ? (currentBpm * 0.25) : (Math.random() * 6 - 3);
+            bpmHistory.push(currentBpm + spike);
+            if (bpmHistory.length > 45) bpmHistory.shift();
+            drawHeartRateWave();
+        }, 450);
+
+        function drawHeartRateWave() {
+            if (!canvas.width) resizeCanvas();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const stepX = canvas.width / (bpmHistory.length - 1);
+            ctx.beginPath();
+            bpmHistory.forEach((val, index) => {
+                const x = index * stepX;
+                const normalized = (val - 50) / 140;
+                const y = canvas.height - (normalized * (canvas.height - 14)) - 7;
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = '#F43F5E';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, 'rgba(244, 63, 94, 0.25)');
+            grad.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        function renderWeeklyChart() {
+            const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+            const values = [7200, 8500, 6100, 9800, 7400, 9470, steps];
+            const maxStep = 11000;
+            const container = document.getElementById('weeklyChart');
+            container.innerHTML = days.map((day, idx) => {
+                const heightPct = Math.min(100, Math.round((values[idx] / maxStep) * 100));
+                const isToday = idx === 6;
+                return `
+                    <div class="flex flex-col items-center gap-1.5 h-full justify-end group">
+                        <span class="text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity text-blue-500">${(values[idx]/1000).toFixed(1)}k</span>
+                        <div class="w-full max-w-[24px] bg-slate-100 dark:bg-darkBg rounded-xl h-24 flex items-end overflow-hidden p-0.5">
+                            <div class="w-full rounded-lg transition-all duration-500 ${isToday ? 'bg-strava' : 'bg-blue-500'}" style="height: ${heightPct}%"></div>
+                        </div>
+                        <span class="text-[11px] font-semibold ${isToday ? 'text-strava' : 'text-slate-400'}">${day}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Inisialisasi awal saat halaman dimuat
+        window.onload = function() {
+            setupDynamicPWA();
+            resizeCanvas();
+            drawHeartRateWave();
+            renderExerciseLists();
+            selectExercise(0);
+        };
+
+        // ==================== KONFIGURASI DINAMIS PWA (MANIFEST & SERVICE WORKER) ====================
+        let deferredInstallPrompt = null;
+
+        function setupDynamicPWA() {
+            try {
+                // 1. Membuat ikon aplikasi SVG beresolusi tinggi (512x512) secara otomatis
+                const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <defs>
+                        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#FC4C02"/>
+                            <stop offset="100%" stop-color="#0e7c86"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#bg)"/>
+                    <path d="M110 270h65l35-95 55 165 45-115 30 45h62" fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>`;
+                const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon);
+                document.getElementById('appleTouchIconLink').href = iconUrl;
+
+                // 2. Mendaftarkan Web App Manifest dinamis agar dikenali Chrome sebagai aplikasi mandiri
+                const startUrl = (window.location.href.startsWith('http')) ? window.location.href : './';
+                const manifestData = {
+                    name: 'PulseRun - Fitness & Semangat Pagi Penjas',
+                    short_name: 'PulseRun',
+                    description: 'Pelacak Lari, Detak Jantung, Pemanasan Penjas & Sinkronisasi Strava',
+                    start_url: startUrl,
+                    display: 'standalone',
+                    orientation: 'portrait',
+                    background_color: '#0B0F19',
+                    theme_color: '#FC4C02',
+                    icons: [
+                        { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+                        { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+                    ]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+                document.getElementById('pwaManifestLink').href = URL.createObjectURL(manifestBlob);
+
+                // 3. Mendaftarkan Service Worker dinamis jika berjalan di protokol HTTPS / Localhost
+                if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+                    const swCode = `
+                        self.addEventListener('install', (e) => self.skipWaiting());
+                        self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+                        self.addEventListener('fetch', (e) => {
+                            e.respondWith(fetch(e.request).catch(() => new Response('Mode Offline Aktif')));
+                        });
+                    `;
+                    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+                }
+            } catch (e) {}
+        }
+
+        // Menangkap event instalasi native browser Chrome/Edge/Android
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            const installBtn = document.getElementById('btnNativePwaInstall');
+            if (installBtn) installBtn.classList.remove('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            const installBtn = document.getElementById('btnNativePwaInstall');
+            if (installBtn) installBtn.classList.add('hidden');
+            showToast('PulseRun berhasil diinstal ke layar utama!');
+        });
+
+        async function triggerNativeInstall() {
+            if (!deferredInstallPrompt) {
+                showToast('Gunakan menu Chrome (⋮) > Tambahkan ke layar utama');
+                return;
+            }
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                deferredInstallPrompt = null;
+                closeDownloadModal();
+            }
+        }
+    </script>
+
+</body></html>

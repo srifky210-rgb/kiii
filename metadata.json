@@ -1,0 +1,6 @@
+{
+  "name": "PulseRun",
+  "description": "Aplikasi fitness pelacak lari, detak jantung, pemanasan interaktif Penjas, kuis, dan riwayat aktivitas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
